@@ -22,7 +22,7 @@ export const Hero = () => {
         >
           <span className="zara-label">Spring/Summer 26 Drop</span>
           <h1 className="text-[80px] md:text-[120px] lg:text-[180px] leading-[0.8] font-black uppercase tracking-[-0.05em] mb-12">
-            Boudha<br/><span className="font-serif italic font-light tracking-normal lowercase">Modernity</span>
+            Boudha<br/><span className="font-serif italic font-light tracking-normal lowercase">Fashion</span>
           </h1>
           <div className="flex flex-col md:flex-row gap-10 items-start md:items-end">
             <Link to="/shop" className="btn-primary">
