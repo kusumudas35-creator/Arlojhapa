@@ -36,6 +36,17 @@ async function startServer() {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
+  const isCloudinaryConfigured = () => {
+    return !!(
+      process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_CLOUD_NAME !== "your_cloud_name" &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_KEY !== "your_api_key" &&
+      process.env.CLOUDINARY_API_SECRET &&
+      process.env.CLOUDINARY_API_SECRET !== "your_api_secret"
+    );
+  };
+
   // Base64 Media Upload API route
   app.post("/api/upload-media-base64", async (req, res) => {
     try {
@@ -44,6 +55,22 @@ async function startServer() {
       if (!fileData) {
         return res.status(400).json({ error: "No media file provided" });
       }
+
+      const isVideo = fileType?.startsWith("video/");
+
+      // If Cloudinary is configured, use it as primary
+      if (isCloudinaryConfigured()) {
+        console.log("Uploading base64 file to Cloudinary...");
+        const result = await cloudinary.uploader.upload(fileData, {
+          resource_type: "auto",
+        });
+        return res.json({
+          url: result.secure_url,
+          type: result.resource_type === "video" ? "video" : "image"
+        });
+      }
+
+      console.log("Cloudinary not configured. Falling back to local storage.");
 
       // Extract the base64 string from data URL (e.g. "data:image/png;base64,iVBORw0KGgo...")
       let base64String = fileData;
@@ -58,7 +85,6 @@ async function startServer() {
       const buffer = Buffer.from(base64String, "base64");
       
       let ext = path.extname(fileName || "");
-      const isVideo = fileType?.startsWith("video/");
       if (!ext) {
         ext = isVideo ? ".mp4" : ".png";
       }
@@ -73,7 +99,7 @@ async function startServer() {
       const fileUrl = `/uploads/${newFilename}`;
       res.json({ url: fileUrl, type: isVideo ? "video" : "image" });
     } catch (error: any) {
-      console.error("Local base64 upload error:", error);
+      console.error("Base64 upload error:", error);
       res.status(500).json({ error: "Failed to upload media", details: error.message });
     }
   });
@@ -93,9 +119,26 @@ async function startServer() {
         return res.status(400).json({ error: "No media file provided" });
       }
 
+      const isVideo = req.file.mimetype.startsWith("video/");
+
+      // If Cloudinary is configured, use it as primary
+      if (isCloudinaryConfigured()) {
+        console.log("Uploading buffer file to Cloudinary...");
+        const base64Str = req.file.buffer.toString("base64");
+        const fileUri = `data:${req.file.mimetype};base64,${base64Str}`;
+        const result = await cloudinary.uploader.upload(fileUri, {
+          resource_type: "auto",
+        });
+        return res.json({
+          url: result.secure_url,
+          type: result.resource_type === "video" ? "video" : "image"
+        });
+      }
+
+      console.log("Cloudinary not configured. Falling back to local storage.");
+
       // Generate a unique filename using timestamp and original name
       let ext = path.extname(req.file.originalname);
-      const isVideo = req.file.mimetype.startsWith("video/");
       if (!ext) {
         ext = isVideo ? ".mp4" : ".png";
       }
@@ -110,7 +153,7 @@ async function startServer() {
 
       res.json({ url: fileUrl, type: isVideo ? "video" : "image" });
     } catch (error: any) {
-      console.error("Local upload error:", error);
+      console.error("Upload error:", error);
       res.status(500).json({ error: "Failed to upload media", details: error.message });
     }
   });
