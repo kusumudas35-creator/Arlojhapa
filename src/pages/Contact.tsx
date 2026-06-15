@@ -11,7 +11,7 @@ export const Contact = () => {
             <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-gray-400">Get in Touch</p>
             <h1 className="text-5xl lg:text-7xl font-display font-bold uppercase tracking-tight">CONTACT</h1>
             <p className="text-gray-500 max-w-sm font-light">
-              We're here to help with your orders, collaborate on creative projects, or just talk about the next drop.
+              We're here to help with your accounts, collaborate on creative projects, or just talk about the next game.
             </p>
           </div>
 
@@ -20,21 +20,21 @@ export const Contact = () => {
               <MapPin className="mt-1" size={20} />
               <div className="space-y-1">
                 <p className="text-xs uppercase font-bold tracking-widest leading-none">Studio Location</p>
-                <p className="text-sm text-gray-500 font-light">Boudha-6, Kathmandu, Nepal (Near Stupa Main Gate)</p>
+                <p className="text-sm text-gray-500 font-light">Global Virtual Spaces</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
               <Phone className="mt-1" size={20} />
               <div className="space-y-1">
                 <p className="text-xs uppercase font-bold tracking-widest leading-none">Phone Support</p>
-                <p className="text-sm text-gray-500 font-light">+977 9812345678 (10AM - 6PM)</p>
+                <p className="text-sm text-gray-500 font-light">+1 800 123 4567 (10AM - 6PM)</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
               <Mail className="mt-1" size={20} />
               <div className="space-y-1">
                 <p className="text-xs uppercase font-bold tracking-widest leading-none">Email Us</p>
-                <p className="text-sm text-gray-500 font-light">hello@arloboudha.com</p>
+                <p className="text-sm text-gray-500 font-light">hello@funhub.com</p>
               </div>
             </div>
           </div>

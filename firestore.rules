@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is an admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'new.arrival05678@gmail.com';
+    }
+
+    match /lookbook_images/{document} {
+      // Anyone can view the lookbook images
+      allow read: if true;
+      // Only the admin can upload/edit lookbook images
+      allow write: if isAdmin();
+    }
+
+    match /journal_images/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -3,79 +3,121 @@ import path from "path";
 import { z } from "zod";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Configure Cloudinary (it will automatically use the environment variables if available)
+// Or we can explicitly configure it:
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // Order Validation Schema
-  const OrderSchema = z.object({
-    items: z.array(z.object({
-      id: z.string(),
-      variant: z.object({
-        sku: z.string(),
-        color: z.string(),
-        size: z.string()
-      }),
-      quantity: z.number().min(1),
-      price: z.number()
-    })).min(1),
-    shippingDetails: z.object({
-      firstName: z.string().min(2),
-      lastName: z.string().min(2),
-      email: z.string().email(),
-      phone: z.string().min(10),
-      address: z.string().min(5),
-      city: z.string(),
-      area: z.string().optional(),
-    }),
-    paymentMethod: z.enum(["cod", "esewa", "khalti"]),
-    total: z.number()
-  });
+  // Ensure uploads directory exists
+  const uploadsDir = path.join(process.cwd(), process.env.NODE_ENV === "production" ? "dist/uploads" : "public/uploads");
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
 
-  // API for orders
-  const orders: any[] = [];
-  
-  app.post("/api/orders", (req, res) => {
+  // Base64 Media Upload API route
+  app.post("/api/upload-media-base64", async (req, res) => {
     try {
-      const orderData = OrderSchema.parse(req.body);
-      const order = {
-        id: `AB-${Math.floor(Math.random() * 1000000)}`,
-        ...orderData,
-        status: "pending",
-        createdAt: new Date(),
-      };
+      const { fileData, fileName, fileType } = req.body;
       
-      orders.push(order);
-      console.log("New Order Received:", order);
-
-      // Handle specific payment methods for external redirection if needed
-      if (orderData.paymentMethod === "esewa") {
-        return res.status(201).json({
-          ...order,
-          paymentInfo: {
-            url: "https://rc-epay.esewa.com.np/api/epay/main/v2/form",
-            merchantCode: "EPAYTEST"
-          }
-        });
+      if (!fileData) {
+        return res.status(400).json({ error: "No media file provided" });
       }
 
-      res.status(201).json(order);
-    } catch (error) {
-       if (error instanceof z.ZodError) {
-         return res.status(400).json({ error: "Validation failed", details: error.issues });
-       }
-       res.status(500).json({ error: "Internal server error" });
+      // Extract the base64 string from data URL (e.g. "data:image/png;base64,iVBORw0KGgo...")
+      let base64String = fileData;
+      if (fileData.includes(",")) {
+        base64String = fileData.split(",")[1];
+      }
+
+      if (!base64String) {
+        return res.status(400).json({ error: "Invalid base64 format" });
+      }
+
+      const buffer = Buffer.from(base64String, "base64");
+      
+      let ext = path.extname(fileName || "");
+      const isVideo = fileType?.startsWith("video/");
+      if (!ext) {
+        ext = isVideo ? ".mp4" : ".png";
+      }
+      
+      const newFilename = `upload_${Date.now()}${ext}`;
+      const filePath = path.join(uploadsDir, newFilename);
+
+      // Write to disk
+      fs.writeFileSync(filePath, buffer);
+
+      // Return public URL
+      const fileUrl = `/uploads/${newFilename}`;
+      res.json({ url: fileUrl, type: isVideo ? "video" : "image" });
+    } catch (error: any) {
+      console.error("Local base64 upload error:", error);
+      res.status(500).json({ error: "Failed to upload media", details: error.message });
     }
   });
 
-  app.get("/api/orders", (req, res) => {
-    res.json(orders);
+  // Legacy Media Upload API route (for multipart)
+  app.post("/api/upload-media", (req, res, next) => {
+    upload.single("media")(req, res, (err) => {
+      if (err) {
+        console.error("Multer error:", err);
+        return res.status(400).json({ error: "File upload error", details: err.message });
+      }
+      next();
+    });
+  }, async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No media file provided" });
+      }
+
+      // Generate a unique filename using timestamp and original name
+      let ext = path.extname(req.file.originalname);
+      const isVideo = req.file.mimetype.startsWith("video/");
+      if (!ext) {
+        ext = isVideo ? ".mp4" : ".png";
+      }
+      const filename = `upload_${Date.now()}${ext}`;
+      const filePath = path.join(uploadsDir, filename);
+
+      // Write the file buffer to disk
+      fs.writeFileSync(filePath, req.file.buffer);
+
+      // Return the public URL
+      const fileUrl = `/uploads/${filename}`;
+
+      res.json({ url: fileUrl, type: isVideo ? "video" : "image" });
+    } catch (error: any) {
+      console.error("Local upload error:", error);
+      res.status(500).json({ error: "Failed to upload media", details: error.message });
+    }
+  });
+
+  // Catch all unhandled API routes BEFORE Vite middleware!
+  app.use("/api", (req, res) => {
+    res.status(404).json({ error: "API route not found" });
   });
 
   // Vite middleware for development
@@ -93,8 +135,13 @@ async function startServer() {
     });
   }
 
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error("Express Global Error:", err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
+  });
+
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Arlo Boudha Backend running on http://localhost:${PORT}`);
+    console.log(`Funhub Backend running on http://localhost:${PORT}`);
   });
 }
 

@@ -15,15 +15,15 @@ export const About = () => {
           >
             <span className="zara-label">Brand Philosophy // Release 01</span>
             <h1 className="text-[14vw] md:text-[10vw] font-display font-black uppercase tracking-tighter leading-[0.75] mb-16">
-              Arlo <br />
-              <span className="font-serif italic font-light lowercase tracking-normal">Boudha</span>
+              Fun<br />
+              <span className="font-serif italic font-light lowercase tracking-normal">hub</span>
             </h1>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
               <p className="text-2xl md:text-3xl font-serif italic text-gray-500 leading-relaxed">
-                "A digital-physical ritual bridging ancestral spirituality with modern urban silhouettes."
+                "A digital hub for immersive, next-generation roleplaying experiences."
               </p>
               <div className="flex flex-col justify-end gap-8">
-                <p className="text-[11px] uppercase tracking-[0.4em] font-bold text-gray-400">Est. 2026 // Kathmandu Valley</p>
+                <p className="text-[11px] uppercase tracking-[0.4em] font-bold text-gray-400">Est. 2026 // Global Network</p>
                 <div className="h-px w-full bg-brand-black" />
               </div>
             </div>
@@ -38,17 +38,17 @@ export const About = () => {
             {
               id: '01',
               title: 'The Meaning',
-              text: 'Arlo is a modern kinetic prefix denoting strength and forward motion. Boudha anchors us in the spiritual heart of Kathmandu. Together, they represent the dual existence of the modern nomad.'
+              text: 'Funhub is the central nexus for digital entertainment, connecting players and creators in highly immersive virtual playgrounds.'
             },
             {
               id: '02',
-              title: 'Geometry',
-              text: 'Our silhouettes are driven by the "Stilled Geometry" of the valley. The perfect circle of the stupa, the architectural square of the base, and the technical lines of the urban sprawl.'
+              title: 'Virtual Spaces',
+              text: 'Our environments are crafted with precise virtual geometry to provide cutting-edge graphical fidelity and low-latency interaction.'
             },
             {
               id: '03',
-              title: 'The Craft',
-              text: 'We utilize 400GSM heavy cotton, high-density 3D puff embroidery, and custom-milled textiles. Every piece is designed for the weight of the streets and the stillness of the temple.'
+              title: 'The Experience',
+              text: 'We utilize state of the art networking protocols and AI driven world building to ensure every adventure feels truly alive.'
             }
           ].map((item) => (
             <div key={item.id} className="space-y-8">
@@ -85,7 +85,7 @@ export const About = () => {
                </div>
              </div>
              <p className="max-w-xs text-[10px] uppercase tracking-[0.2em] font-medium text-white/50 leading-loose">
-               Inspired by the aged stone of stupas and the depth of midnight in the valley alleys.
+               Inspired by the depth of midnight in virtual cities.
              </p>
           </div>
         </div>
@@ -103,10 +103,10 @@ export const About = () => {
         <div className="max-w-2xl mx-auto px-10 space-y-12">
            <h2 className="text-5xl font-display font-black uppercase tracking-tighter">Join the Digital Ritual</h2>
            <p className="text-lg font-serif italic text-gray-500">
-             Follow us as we document the transition of Kathmandu's street culture.
+             Follow us as we redefine modern digital entertainment.
            </p>
            <a href="#" className="inline-block border-b-2 border-brand-black pb-2 text-[12px] font-bold uppercase tracking-[0.3em] hover:opacity-50 transition-all">
-             Instagram / @ArloBoudha
+             Instagram / @Funhub
            </a>
         </div>
       </section>

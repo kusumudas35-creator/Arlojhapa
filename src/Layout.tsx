@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import { CartDrawer } from './components/CartDrawer';
+import { AdBanner } from './components/AdBanner';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLocation } from 'react-router-dom';
 
@@ -15,8 +15,8 @@ export const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <CartDrawer />
-      <main className="flex-grow pt-32">
+      <main className={`flex-grow ${pathname === '/' ? 'pt-[104px]' : 'pt-32'}`}>
+        <AdBanner />
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}

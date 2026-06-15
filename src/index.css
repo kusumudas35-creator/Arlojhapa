@@ -6,33 +6,34 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-serif: "Cormorant Garamond", serif;
   
-  --color-brand-black: #0A0A0A;
-  --color-brand-gray: #F5F5F5;
-  --color-brand-beige: #F9F9F7;
-  --color-brand-border: #EEEEEE;
+  --color-brand-black: #050000;
+  --color-brand-gray: #1A1111;
+  --color-brand-beige: #120A0A;
+  --color-brand-border: #FF1053;
+  --color-brand-neon: #FF1053;
 }
 
 @layer base {
   body {
-    @apply bg-white text-brand-black font-sans antialiased selection:bg-brand-black selection:text-white;
+    @apply bg-[#050000] text-rose-100 font-sans antialiased selection:bg-[#FF1053] selection:text-white;
   }
 }
 
 @layer components {
   .premium-blur {
-    @apply backdrop-blur-md bg-white/80;
+    @apply backdrop-blur-md bg-black/80 border-b border-[#FF1053]/20;
   }
   
   .btn-primary {
-    @apply bg-brand-black text-white px-10 py-5 font-display uppercase tracking-[0.2em] text-[12px] font-bold transition-all hover:bg-[#333333] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-[#FF1053] text-white px-10 py-5 font-display uppercase tracking-[0.2em] text-[12px] font-bold transition-all hover:bg-[#D0003B] hover:shadow-[0_0_15px_#FF1053] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   .btn-secondary {
-    @apply border border-brand-border text-brand-black px-10 py-5 font-display uppercase tracking-[0.2em] text-[12px] font-bold transition-all hover:bg-brand-black hover:text-white active:scale-[0.98];
+    @apply border border-[#FF1053] text-[#FF1053] px-10 py-5 font-display uppercase tracking-[0.2em] text-[12px] font-bold transition-all hover:bg-[#FF1053] hover:text-white hover:shadow-[0_0_15px_#FF1053] active:scale-[0.98];
   }
   
   .zara-label {
-    @apply text-[10px] uppercase font-bold tracking-[0.25em] text-gray-500 mb-2 block;
+    @apply text-[10px] uppercase font-bold tracking-[0.25em] text-rose-500 mb-2 block;
   }
 }
 
@@ -45,7 +46,7 @@
 }
 
 .technical-line {
-  @apply h-px w-full bg-brand-border;
+  @apply h-px w-full bg-[#FF1053]/30;
 }
 
 .mask-fade-sides {
