@@ -7,18 +7,22 @@ export const AdBanner = () => {
     if (initialized.current) return;
     initialized.current = true;
 
-    // Load ad scripts
-    const script1 = document.createElement('script');
-    script1.src = 'https://a.magsrv.com/ad-provider.js';
-    script1.async = true;
-    script1.type = 'application/javascript';
-    document.head.appendChild(script1);
+    // Load ad scripts if not already present
+    if (!document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]')) {
+      const script1 = document.createElement('script');
+      script1.src = 'https://a.magsrv.com/ad-provider.js';
+      script1.async = true;
+      script1.type = 'application/javascript';
+      document.head.appendChild(script1);
+    }
 
-    const script2 = document.createElement('script');
-    script2.src = 'https://a.pemsrv.com/ad-provider.js';
-    script2.async = true;
-    script2.type = 'application/javascript';
-    document.head.appendChild(script2);
+    if (!document.querySelector('script[src="https://a.pemsrv.com/ad-provider.js"]')) {
+      const script2 = document.createElement('script');
+      script2.src = 'https://a.pemsrv.com/ad-provider.js';
+      script2.async = true;
+      script2.type = 'application/javascript';
+      document.head.appendChild(script2);
+    }
 
     const initAd = () => {
       // Push event for each magsrv ad zone

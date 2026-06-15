@@ -36,6 +36,17 @@ async function startServer() {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
+  // Explicit, robust serving of /uploads for uploaded media with CORS and byte-range controls (important for Safari/iOS)
+  app.use("/uploads", express.static(uploadsDir, {
+    setHeaders: (res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "*");
+      res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges");
+      res.setHeader("Accept-Ranges", "bytes");
+    }
+  }));
+
   const isCloudinaryConfigured = () => {
     return !!(
       process.env.CLOUDINARY_CLOUD_NAME &&
