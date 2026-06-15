@@ -20,6 +20,23 @@ export const Admin = () => {
   const [nextIndex, setNextIndex] = useState(1);
   const [nextJournalIndex, setNextJournalIndex] = useState(1);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [storageStatus, setStorageStatus] = useState<{ cloudinaryConfigured: boolean; cloudName: string | null } | null>(null);
+
+  // Fetch storage configuration status
+  useEffect(() => {
+    const checkStorage = async () => {
+      try {
+        const res = await fetch('/api/storage-status');
+        if (res.ok) {
+          const status = await res.json();
+          setStorageStatus(status);
+        }
+      } catch (err) {
+        console.error("Error checking storage status:", err);
+      }
+    };
+    checkStorage();
+  }, []);
 
   // Check auth
   useEffect(() => {
@@ -149,6 +166,44 @@ export const Admin = () => {
         <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-lg mb-8">
           <p className="font-bold uppercase text-[10px] tracking-widest mb-1">Firebase Permission Error</p>
           <p className="text-sm">{permissionError}</p>
+        </div>
+      )}
+
+      {/* Cloudinary Storage Status Notice */}
+      {storageStatus && (
+        <div className={`p-5 rounded-lg mb-10 border ${
+          storageStatus.cloudinaryConfigured 
+            ? "bg-green-500/10 border-green-500/30 text-green-400" 
+            : "bg-amber-500/10 border-amber-500/30 text-amber-500"
+        }`}>
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${
+              storageStatus.cloudinaryConfigured ? "bg-green-500" : "bg-amber-500"
+            }`} />
+            <h3 className="font-bold uppercase text-[11px] tracking-wider font-mono">
+              Backend Storage: {storageStatus.cloudinaryConfigured ? "Cloudinary Active" : "Local Sandbox Temp Mode"}
+            </h3>
+          </div>
+          
+          {storageStatus.cloudinaryConfigured ? (
+            <p className="text-sm opacity-90">
+              Successfully connected to Cloudinary (<strong>{storageStatus.cloudName}</strong>). All uploaded lookbook and journal images/videos are automatically stored in the cloud. They are fully reliable, persistent, and accessible across different browsers or devices!
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm opacity-95 leading-relaxed">
+                Cloudinary API keys are not detected on the backend. Files are currently stored inside the local server container, which gets wiped when the server restarts, stays idle, redeploys, or is opened in other browser sessions.
+              </p>
+              <div className="bg-black/40 p-4 rounded border border-amber-500/20 text-xs text-amber-400 font-mono space-y-2">
+                <p className="font-bold text-amber-200">To persist uploads permanently across all browsers, add these key-value pairs in the Settings panel (under Secrets) in Google AI Studio:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><code>CLOUDINARY_CLOUD_NAME</code></li>
+                  <li><code>CLOUDINARY_API_KEY</code></li>
+                  <li><code>CLOUDINARY_API_SECRET</code></li>
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       )}
       

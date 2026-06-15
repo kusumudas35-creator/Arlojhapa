@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import path from "path";
 import { z } from "zod";
@@ -10,8 +11,7 @@ import fs from "fs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configure Cloudinary (it will automatically use the environment variables if available)
-// Or we can explicitly configure it:
+// Configure Cloudinary after loading environment variables
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -46,6 +46,13 @@ async function startServer() {
       res.setHeader("Accept-Ranges", "bytes");
     }
   }));
+
+  app.get("/api/storage-status", (req, res) => {
+    res.json({
+      cloudinaryConfigured: isCloudinaryConfigured(),
+      cloudName: isCloudinaryConfigured() ? process.env.CLOUDINARY_CLOUD_NAME : null
+    });
+  });
 
   const isCloudinaryConfigured = () => {
     return !!(
