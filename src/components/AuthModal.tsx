@@ -29,7 +29,33 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       }
       onClose();
     } catch (err: any) {
-      setError(err.message);
+      console.error("Auth Error details:", err);
+      let friendlyMessage = err.message;
+      
+      const errorCode = err.code || "";
+      if (errorCode === "auth/invalid-credential" || err.message?.includes("invalid-credential")) {
+        if (isLogin) {
+          friendlyMessage = "Incorrect email or password. If you don't have an account yet, click 'Register' below to create a new one.";
+        } else {
+          friendlyMessage = "The registration credentials are invalid or expired. Please check your inputs and try again.";
+        }
+      } else if (errorCode === "auth/email-already-in-use" || err.message?.includes("email-already-in-use")) {
+        friendlyMessage = "This email address is already in use. If you already have an account, click 'Login' below.";
+      } else if (errorCode === "auth/invalid-email" || err.message?.includes("invalid-email")) {
+        friendlyMessage = "Please enter a valid email address (e.g., name@example.com).";
+      } else if (errorCode === "auth/weak-password" || err.message?.includes("weak-password")) {
+        friendlyMessage = "Your password is too weak. Please use at least 6 characters.";
+      } else if (errorCode === "auth/user-not-found" || err.message?.includes("user-not-found")) {
+        friendlyMessage = "No account found with this email. Click 'Register' below to save your email!";
+      } else if (errorCode === "auth/wrong-password" || err.message?.includes("wrong-password")) {
+        friendlyMessage = "Incorrect password. Please try again.";
+      } else if (errorCode === "auth/too-many-requests" || err.message?.includes("too-many-requests")) {
+        friendlyMessage = "Too many failed login attempts. This account is temporarily locked. Please try again in a few minutes.";
+      } else if (errorCode === "auth/network-request-failed" || err.message?.includes("network-request-failed")) {
+        friendlyMessage = "Network error. Please check your internet connection and try again.";
+      }
+      
+      setError(friendlyMessage);
     } finally {
       setLoading(false);
     }
