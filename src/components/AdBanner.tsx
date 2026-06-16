@@ -1,52 +1,43 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
 export const AdBanner = () => {
-  const initialized = useRef(false);
-
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    // 1. Remove any existing ad scripts from the DOM to force a clean re-run/reload
+    const oldScript1 = document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]');
+    if (oldScript1) oldScript1.remove();
 
-    // Load ad scripts if not already present
-    if (!document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]')) {
-      const script1 = document.createElement('script');
-      script1.src = 'https://a.magsrv.com/ad-provider.js';
-      script1.async = true;
-      script1.type = 'application/javascript';
-      document.head.appendChild(script1);
+    const oldScript2 = document.querySelector('script[src="https://a.pemsrv.com/ad-provider.js"]');
+    if (oldScript2) oldScript2.remove();
+
+    // 2. Reset and pre-populate window.AdProvider array with server push objects
+    // Since there are 7 <ins> tags inside this component, we push 7 serve events
+    // @ts-ignore
+    window.AdProvider = [];
+    for (let i = 0; i < 7; i++) {
+      // @ts-ignore
+      window.AdProvider.push({ "serve": {} });
     }
 
-    if (!document.querySelector('script[src="https://a.pemsrv.com/ad-provider.js"]')) {
-      const script2 = document.createElement('script');
-      script2.src = 'https://a.pemsrv.com/ad-provider.js';
-      script2.async = true;
-      script2.type = 'application/javascript';
-      document.head.appendChild(script2);
-    }
+    // 3. Create and append fresh script tags that will execute and process the AdProvider queue
+    const script1 = document.createElement('script');
+    script1.src = 'https://a.magsrv.com/ad-provider.js';
+    script1.async = true;
+    script1.type = 'application/javascript';
+    document.head.appendChild(script1);
 
-    const initAd = () => {
-      // Push event for each magsrv ad zone
-      // @ts-ignore
-      (window.AdProvider = window.AdProvider || []).push({"serve": {}});
-      // @ts-ignore
-      (window.AdProvider = window.AdProvider || []).push({"serve": {}});
-      // @ts-ignore
-      (window.AdProvider = window.AdProvider || []).push({"serve": {}});
-      // @ts-ignore
-      (window.AdProvider = window.AdProvider || []).push({"serve": {}});
-      // @ts-ignore
-      (window.AdProvider = window.AdProvider || []).push({"serve": {}});
-      // @ts-ignore
-      (window.AdProvider = window.AdProvider || []).push({"serve": {}});
-      // @ts-ignore
-      (window.AdProvider = window.AdProvider || []).push({"serve": {}});
-    };
-    
-    // Call it after a short delay to ensure DOM is ready
-    const timer = setTimeout(initAd, 500);
+    const script2 = document.createElement('script');
+    script2.src = 'https://a.pemsrv.com/ad-provider.js';
+    script2.async = true;
+    script2.type = 'application/javascript';
+    document.head.appendChild(script2);
 
     return () => {
-      clearTimeout(timer);
+      // Cleanup script tags on unmount to prevent stale state 
+      const s1 = document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]');
+      if (s1) s1.remove();
+
+      const s2 = document.querySelector('script[src="https://a.pemsrv.com/ad-provider.js"]');
+      if (s2) s2.remove();
     };
   }, []);
 

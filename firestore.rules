@@ -17,5 +17,15 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    match /stats/{document} {
+      allow read: if isAdmin();
+      allow create, update: if true;
+    }
+
+    match /visit_logs/{document} {
+      allow read: if isAdmin();
+      allow create: if true;
+    }
   }
 }

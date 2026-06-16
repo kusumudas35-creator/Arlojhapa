@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './Layout';
 import { Home } from './pages/Home';
@@ -6,9 +6,15 @@ import { About } from './pages/About';
 import { Contact } from './pages/Contact';
 import { Admin } from './pages/Admin';
 import ScrollToTop from './components/ScrollToTop';
+import { trackVisit } from './lib/tracker';
 
 export default function App() {
+  useEffect(() => {
+    trackVisit();
+  }, []);
+
   return (
+
     <Router>
       <ScrollToTop />
       <Layout>

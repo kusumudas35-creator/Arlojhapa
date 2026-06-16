@@ -176,6 +176,88 @@ async function startServer() {
     }
   });
 
+  // Visitor tracking files
+  const statsFile = path.join(uploadsDir, "visitor_stats.json");
+  const logsFile = path.join(uploadsDir, "visitor_logs.json");
+
+  // Helper to read JSON safely
+  const readJSONFile = (filePath: string, defaultValue: any) => {
+    try {
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, "utf-8");
+        return JSON.parse(content);
+      }
+    } catch (e) {
+      console.error(`Error reading ${filePath}:`, e);
+    }
+    return defaultValue;
+  };
+
+  // Helper to write JSON safely
+  const writeJSONFile = (filePath: string, data: any) => {
+    try {
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+    } catch (e) {
+      console.error(`Error writing ${filePath}:`, e);
+    }
+  };
+
+  // Visitor tracking API endpoints
+  app.post("/api/track-visit", (req, res) => {
+    try {
+      const { browser, os, language, referrer, screenSize, viewportSize } = req.body;
+
+      // 1. Increment total count
+      const stats = readJSONFile(statsFile, { totalCount: 0 });
+      stats.totalCount = (stats.totalCount || 0) + 1;
+      writeJSONFile(statsFile, stats);
+
+      // 2. Add log entry
+      const logEntry = {
+        id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+        timestamp: new Date().toISOString(),
+        browser: browser || "Unknown Browser",
+        os: os || "Unknown OS",
+        language: language || "en",
+        referrer: referrer || "Direct / Bookmark",
+        screenSize: screenSize || "Unknown",
+        viewportSize: viewportSize || "Unknown"
+      };
+
+      const logs = readJSONFile(logsFile, []);
+      logs.unshift(logEntry); // Put newest first
+      
+      // Cap at 100 log entries to preserve space and memory
+      if (logs.length > 100) {
+        logs.length = 100;
+      }
+      writeJSONFile(logsFile, logs);
+
+      res.json({ success: true, totalCount: stats.totalCount });
+    } catch (err: any) {
+      console.error("Server track visit error:", err);
+      res.status(500).json({ error: "Failed to log visit", details: err.message });
+    }
+  });
+
+  app.get("/api/visitor-stats", (req, res) => {
+    try {
+      const stats = readJSONFile(statsFile, { totalCount: 0 });
+      const logs = readJSONFile(logsFile, []);
+      res.json({
+        totalCount: stats.totalCount,
+        recentLogs: logs
+      });
+    } catch (err: any) {
+      console.error("Server get visitor stats error:", err);
+      res.status(500).json({ error: "Failed to read stats", details: err.message });
+    }
+  });
+
   // Catch all unhandled API routes BEFORE Vite middleware!
   app.use("/api", (req, res) => {
     res.status(404).json({ error: "API route not found" });

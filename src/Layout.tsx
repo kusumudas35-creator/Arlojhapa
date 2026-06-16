@@ -16,7 +16,7 @@ export const Layout = ({ children }: LayoutProps) => {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className={`flex-grow ${pathname === '/' ? 'pt-[104px]' : 'pt-32'}`}>
-        <AdBanner key={pathname} />
+        {pathname !== '/admin' && <AdBanner key={pathname} />}
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}

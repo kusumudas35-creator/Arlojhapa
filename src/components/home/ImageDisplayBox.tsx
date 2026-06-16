@@ -107,7 +107,7 @@ export const ImageDisplayBox = () => {
     <section className="py-20 px-4 md:px-10 bg-black">
       <div className="container mx-auto max-w-5xl">
         <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-10 text-center text-[#FF1053] drop-shadow-[0_0_15px_rgba(255,16,83,0.5)]">
-          Fulfill Your Deepest Desires
+          NEW ROLEPLAY GAME ! WANNA PLAY??
         </h2>
         
         <div 
