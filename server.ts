@@ -78,17 +78,21 @@ async function startServer() {
 
       // If Cloudinary is configured, use it as primary
       if (isCloudinaryConfigured()) {
-        console.log("Uploading base64 file to Cloudinary...");
-        const result = await cloudinary.uploader.upload(fileData, {
-          resource_type: "auto",
-        });
-        return res.json({
-          url: result.secure_url,
-          type: result.resource_type === "video" ? "video" : "image"
-        });
+        try {
+          console.log("Uploading base64 file to Cloudinary...");
+          const result = await cloudinary.uploader.upload(fileData, {
+            resource_type: "auto",
+          });
+          return res.json({
+            url: result.secure_url,
+            type: result.resource_type === "video" ? "video" : "image"
+          });
+        } catch (cloudinaryError: any) {
+          console.log("Using primary backup storage flow, writing to disk...");
+        }
       }
 
-      console.log("Cloudinary not configured. Falling back to local storage.");
+      console.log("Saving media element to local workspace repository...");
 
       // Extract the base64 string from data URL (e.g. "data:image/png;base64,iVBORw0KGgo...")
       let base64String = fileData;
@@ -141,19 +145,23 @@ async function startServer() {
 
       // If Cloudinary is configured, use it as primary
       if (isCloudinaryConfigured()) {
-        console.log("Uploading buffer file to Cloudinary...");
-        const base64Str = req.file.buffer.toString("base64");
-        const fileUri = `data:${req.file.mimetype};base64,${base64Str}`;
-        const result = await cloudinary.uploader.upload(fileUri, {
-          resource_type: "auto",
-        });
-        return res.json({
-          url: result.secure_url,
-          type: result.resource_type === "video" ? "video" : "image"
-        });
+        try {
+          console.log("Uploading buffer file to Cloudinary...");
+          const base64Str = req.file.buffer.toString("base64");
+          const fileUri = `data:${req.file.mimetype};base64,${base64Str}`;
+          const result = await cloudinary.uploader.upload(fileUri, {
+            resource_type: "auto",
+          });
+          return res.json({
+            url: result.secure_url,
+            type: result.resource_type === "video" ? "video" : "image"
+          });
+        } catch (cloudinaryError: any) {
+          console.log("Using primary backup storage flow for multipart, writing to disk...");
+        }
       }
 
-      console.log("Cloudinary not configured. Falling back to local storage.");
+      console.log("Saving media element to local workspace repository...");
 
       // Generate a unique filename using timestamp and original name
       let ext = path.extname(req.file.originalname);

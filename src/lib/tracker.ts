@@ -1,13 +1,31 @@
+import { db } from './firebase';
+import { doc, setDoc, updateDoc, increment, getDoc, collection, addDoc } from 'firebase/firestore';
+
 export async function trackVisit() {
-  // Use localStorage to track unique visitors (devices) to accurately represent
-  // "how many people have visited the website in total" rather than raw page views.
-  if (localStorage.getItem('web_unique_visitor_v1')) {
-    return;
+  // Use a memory guard to prevent multiple tracking runs on the same session/load
+  if (typeof window !== 'undefined') {
+    if ((window as any).__web_tracked_in_session) {
+      return;
+    }
+    (window as any).__web_tracked_in_session = true;
+  }
+
+  // Use localStorage with safety handling (iframe sandboxing could deny access)
+  let isUnique = true;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      if (localStorage.getItem('web_unique_visitor_v1')) {
+        isUnique = false;
+      } else {
+        localStorage.setItem('web_unique_visitor_v1', 'true');
+      }
+    }
+  } catch (e) {
+    console.warn("Storage access not available in this frame/context. Falling back to session/memory tracking.");
+    // Fallback if local storage is disabled or throws error
   }
 
   try {
-    localStorage.setItem('web_unique_visitor_v1', 'true');
-
     const ua = navigator.userAgent;
     let browser = "Unknown Browser";
     if (ua.indexOf("Firefox") > -1) browser = "Firefox";
@@ -31,23 +49,48 @@ export async function trackVisit() {
       language: navigator.language || "en",
       referrer: document.referrer || "Direct / Bookmark",
       screenSize: `${window.screen.width}x${window.screen.height}`,
-      viewportSize: `${window.innerWidth}x${window.innerHeight}`
+      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+      timestamp: new Date().toISOString()
     };
 
-    // Send tracking data to backend API instead of Firestore client SDK
-    const response = await fetch("/api/track-visit", {
+    // If the device is unique, update our persistent visitor database in Firestore
+    if (isUnique) {
+      // 1. Log the visit to visit_logs in Firestore
+      await addDoc(collection(db, 'visit_logs'), logData);
+
+      // 2. Increment the global unique visitor counter in stats/visitor_count (Firestore)
+      const docRef = doc(db, 'stats', 'visitor_count');
+      try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          await updateDoc(docRef, {
+            totalCount: increment(1)
+          });
+        } else {
+          await setDoc(docRef, {
+            totalCount: 1
+          }, { merge: true });
+        }
+      } catch (innerErr) {
+        // Fallback setDoc
+        await setDoc(docRef, {
+          totalCount: 1
+        }, { merge: true });
+      }
+    }
+
+    // Still hit backend API as secondary redundancy/log collection
+    await fetch("/api/track-visit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(logData)
+    }).catch(err => {
+      console.log("Secondary API tracking logged locally:", err.message);
     });
 
-    if (!response.ok) {
-      throw new Error(`Tracker API responded with status ${response.status}`);
-    }
-
   } catch (err) {
-    console.error("Error tracking unique visit:", err);
+    console.error("Error logging unique visit to Firestore:", err);
   }
 }
