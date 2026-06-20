@@ -233,7 +233,7 @@ const VideoCard = ({ video, index, isMuted, onExpand }: VideoCardProps) => {
         <video 
           ref={videoRef}
           src={video.url} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-contain bg-black transition-transform duration-500 group-hover:scale-105"
           muted={isMuted}
           loop
           playsInline

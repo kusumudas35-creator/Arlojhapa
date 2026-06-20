@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { ArrowRight, Play, X } from 'lucide-react';
+import { ArrowRight, Play, X, Smartphone, RotateCw } from 'lucide-react';
 
 interface UploadedMedia {
   id: string;
@@ -53,6 +53,20 @@ export const ImageDisplayBox = () => {
     };
   }, []);
 
+  const [showRotateHint, setShowRotateHint] = useState(false);
+
+  // Prevent scroll behind the player when fullscreen/playing is active
+  useEffect(() => {
+    if (isPlaying) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isPlaying]);
+
   const handleNextImage = () => {
     if (images.length === 0) return;
     setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -60,24 +74,32 @@ export const ImageDisplayBox = () => {
 
   const startPlayback = async () => {
     setIsPlaying(true);
+    
+    // Determine initially whether we should show the rotating device hint
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 768;
+    
+    if (isMobileDevice && isPortrait) {
+      setShowRotateHint(true);
+      setTimeout(() => {
+        setShowRotateHint(false);
+      }, 3000);
+    }
+
     if (!containerRef.current) return;
 
-    try {
-      const container = containerRef.current;
-      if (container.requestFullscreen) {
-        await container.requestFullscreen();
-      } else if ((container as any).webkitRequestFullscreen) {
-        await (container as any).webkitRequestFullscreen();
+    // Only attempt browser native fullscreen on PC/desktop devices
+    if (!isMobileDevice) {
+      try {
+        const container = containerRef.current;
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if ((container as any).webkitRequestFullscreen) {
+          await (container as any).webkitRequestFullscreen();
+        }
+      } catch (err) {
+        console.error('Error enabling native fullscreen:', err);
       }
-
-      // Lock orientation to landscape for mobile
-      if (screen.orientation && (screen.orientation as any).lock) {
-        await (screen.orientation as any).lock('landscape').catch(() => {
-          // Ignore errors gracefully (e.g. not supported or on desktop)
-        });
-      }
-    } catch (err) {
-      console.error('Error enabling fullscreen:', err);
     }
   };
 
@@ -90,13 +112,11 @@ export const ImageDisplayBox = () => {
           await (document as any).webkitExitFullscreen();
         }
       }
-      if (screen.orientation && (screen.orientation as any).unlock) {
-        (screen.orientation as any).unlock();
-      }
     } catch (err) {
       console.error('Error exiting fullscreen:', err);
     }
     setIsPlaying(false);
+    setShowRotateHint(false);
   };
 
   if (images.length === 0) {
@@ -127,7 +147,7 @@ export const ImageDisplayBox = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8, ease: "easeInOut" }}
-                className={`absolute inset-0 w-full h-full ${isPlaying ? 'object-contain' : 'object-cover'}`}
+                className="absolute inset-0 w-full h-full object-contain bg-black"
                 autoPlay
                 muted
                 loop
@@ -144,6 +164,58 @@ export const ImageDisplayBox = () => {
                 className={`absolute inset-0 w-full h-full ${isPlaying ? 'object-contain' : 'object-cover'}`}
                 alt={`Media item ${images[currentIndex]?.orderIndex}`}
               />
+            )}
+          </AnimatePresence>
+
+          {/* Rotate Phone Hint Overlay */}
+          <AnimatePresence>
+            {showRotateHint && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-30 pointer-events-none"
+              >
+                <motion.div
+                  initial={{ scale: 0.85, y: 10 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.85, y: 10 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 350 }}
+                  className="flex flex-col items-center gap-4 bg-[#050000]/95 border border-[#FF1053]/40 p-6 rounded-2xl backdrop-blur-md max-w-[280px] text-center shadow-[0_0_50px_rgba(255,16,83,0.25)]"
+                >
+                  <div className="relative w-16 h-16 flex items-center justify-center">
+                    <motion.div
+                      animate={{ rotate: [0, 90, 90, 0] }}
+                      transition={{
+                        duration: 2.2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        times: [0, 0.45, 0.85, 1],
+                        repeatDelay: 0.3
+                      }}
+                      className="text-[#FF1053]"
+                    >
+                      <Smartphone size={46} className="stroke-[1.5]" />
+                    </motion.div>
+                    <motion.div
+                      animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute right-0 top-0 text-[#FF1053]"
+                    >
+                      <RotateCw size={18} />
+                    </motion.div>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-extrabold uppercase tracking-wider text-sm mb-1 text-[#FF1053] drop-shadow-[0_0_8px_rgba(255,16,83,0.4)]">
+                      Rotate Screen
+                    </h3>
+                    <p className="text-gray-300 text-xs leading-relaxed font-medium">
+                      Turn your phone to landscape mode for the full widescreen view!
+                    </p>
+                  </div>
+                </motion.div>
+              </motion.div>
             )}
           </AnimatePresence>
 

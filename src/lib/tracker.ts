@@ -61,21 +61,11 @@ export async function trackVisit() {
       // 2. Increment the global unique visitor counter in stats/visitor_count (Firestore)
       const docRef = doc(db, 'stats', 'visitor_count');
       try {
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          await updateDoc(docRef, {
-            totalCount: increment(1)
-          });
-        } else {
-          await setDoc(docRef, {
-            totalCount: 1
-          }, { merge: true });
-        }
-      } catch (innerErr) {
-        // Fallback setDoc
         await setDoc(docRef, {
-          totalCount: 1
+          totalCount: increment(1)
         }, { merge: true });
+      } catch (innerErr) {
+        console.error("Atomic visitor increment failed:", innerErr);
       }
     }
 

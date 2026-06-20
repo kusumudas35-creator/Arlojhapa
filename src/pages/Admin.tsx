@@ -296,7 +296,7 @@ export const Admin = () => {
           <div className="mt-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {images.map((img, i) => (
-                <div key={img.id} className="relative aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group">
+                <div key={img.id} className={`relative ${img.type === 'video' ? '' : 'aspect-[3/4]'} bg-black rounded-lg overflow-hidden border border-gray-200 group`}>
                   <span className="absolute top-2 left-2 bg-black text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full z-10 font-bold">
                     {img.orderIndex}
                   </span>
@@ -307,7 +307,14 @@ export const Admin = () => {
                     Delete
                   </button>
                   {img.type === 'video' ? (
-                    <video src={img.url} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+                    <video 
+                      src={img.url} 
+                      className="w-full h-auto block rounded-lg max-h-[300px] object-contain" 
+                      muted 
+                      loop 
+                      autoPlay 
+                      playsInline 
+                    />
                   ) : (
                     <img src={img.url} alt={`Upload ${img.orderIndex}`} className="w-full h-full object-cover" />
                   )}
@@ -342,7 +349,7 @@ export const Admin = () => {
           <div className="mt-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {journalImages.map((img, i) => (
-                <div key={img.id} className="relative aspect-[16/10] bg-black rounded-lg overflow-hidden border border-[#FF1053]/20 group">
+                <div key={img.id} className="relative bg-[#050000] rounded-lg overflow-hidden border border-[#FF1053]/20 group flex items-center justify-center">
                   <span className="absolute top-2 left-2 bg-[#FF1053] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full z-10 font-bold">
                     {img.orderIndex}
                   </span>
@@ -354,7 +361,7 @@ export const Admin = () => {
                   </button>
                   <video 
                     src={img.url} 
-                    className="w-full h-full object-cover" 
+                    className="w-full h-auto block rounded-lg object-contain" 
                     muted 
                     loop 
                     autoPlay 
