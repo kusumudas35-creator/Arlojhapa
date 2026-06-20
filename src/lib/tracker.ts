@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { db, handleFirestoreError, OperationType } from './firebase';
 import { doc, setDoc, updateDoc, increment, getDoc, collection, addDoc } from 'firebase/firestore';
 
 export async function trackVisit() {
@@ -56,7 +56,11 @@ export async function trackVisit() {
     // If the device is unique, update our persistent visitor database in Firestore
     if (isUnique) {
       // 1. Log the visit to visit_logs in Firestore
-      await addDoc(collection(db, 'visit_logs'), logData);
+      try {
+        await addDoc(collection(db, 'visit_logs'), logData);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.CREATE, 'visit_logs');
+      }
 
       // 2. Increment the global unique visitor counter in stats/visitor_count (Firestore)
       const docRef = doc(db, 'stats', 'visitor_count');
@@ -65,7 +69,7 @@ export async function trackVisit() {
           totalCount: increment(1)
         }, { merge: true });
       } catch (innerErr) {
-        console.error("Atomic visitor increment failed:", innerErr);
+        handleFirestoreError(innerErr, OperationType.WRITE, 'stats/visitor_count');
       }
     }
 
@@ -84,3 +88,4 @@ export async function trackVisit() {
     console.error("Error logging unique visit to Firestore:", err);
   }
 }
+
